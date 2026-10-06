@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EIN-CV — CV Builder</title>
+  <meta name="description" content="EIN-CV — a local-first, accessible CV builder with PDF and DOCX export.">
+  <meta name="theme-color" content="#447CE8">
+  <link rel="icon" type="image/png" href="ein-logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="EIN-CV home" id="brandHome">
+        <span class="ein-logo" aria-hidden="true"><img src="ein-logo.png" alt=""></span>
+        <span class="brand-copy"><strong>EIN-CV</strong><span>CV Builder</span></span>
+      </a>
+      <button id="sidebarToggle" class="mobile-menu-btn" type="button" aria-label="Open editor panel" aria-controls="appSidebar" aria-expanded="false">☰</button>
+      <div class="top-actions">
+        <button id="undoBtn" class="icon-btn" title="Undo" aria-label="Undo">↶</button>
+        <button id="redoBtn" class="icon-btn" title="Redo" aria-label="Redo">↷</button>
+        <button id="saveBtn" class="ghost-btn save-btn"><span class="status-dot" aria-hidden="true"></span>Save</button>
+        <button id="exportJsonBtn" class="ghost-btn">Export</button>
+        <label class="ghost-btn file-btn">Import <input id="importJson" type="file" accept=".json"></label>
+        <button id="docxBtn" class="ghost-btn" title="Export editable Word document">DOCX</button>
+        <button id="printBtn" class="primary-btn">Download PDF</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar" id="appSidebar">
+        <div class="side-tabs">
+          <button class="side-tab active" data-tab="content">Content</button>
+          <button class="side-tab" data-tab="design">Design</button>
+        </div>
+
+        <section id="contentTab" class="tab-panel">
+          <div class="panel-heading">
+            <div><h2>Content</h2><p>Edit your CV sections</p></div>
+          </div>
+          <div id="sectionList" class="section-list"></div>
+          <button id="addSectionBtn" class="add-section">＋ Add section</button>
+          <div class="quick-tools">
+            <button id="addExperienceBtn">＋ Experience</button>
+            <button id="addEducationBtn">＋ Education</button>
+            <button id="addProjectBtn">＋ Project</button>
+          </div>
+        </section>
+
+        <section id="designTab" class="tab-panel hidden">
+          <div class="panel-heading">
+            <div><h2>Design</h2><p>Customize layout and appearance</p></div>
+          </div>
+          <label>Template
+            <select id="templateSelect">
+              <option value="classic">Classic</option>
+              <option value="modern">Modern</option>
+              <option value="minimal">Minimal</option>
+              <option value="compact">Compact</option>
+              <option value="creative">Creative</option>
+            </select>
+          </label>
+          <label>Page
+            <select id="pageSize">
+              <option value="A4">A4</option>
+              <option value="LETTER">Letter</option>
+            </select>
+          </label>
+          <label>Font
+            <select id="fontSelect">
+              <option value="Inter">Inter / system</option>
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Times New Roman">Times New Roman</option>
+            </select>
+          </label>
+          <label>Accent color <span class="color-control"><input id="accentColor" type="color" value="#447CE8"><code id="accentHex">#447CE8</code></span></label>
+          <label>Text color <span class="color-control"><input id="textColor" type="color" value="#2B2B2B"><code id="textHex">#2B2B2B</code></span></label>
+          <label>Base font size <input id="fontSize" type="range" min="8" max="13" step=".25" value="10.5"><span id="fontSizeValue">10.5px</span></label>
+          <label>Page margins <input id="marginSize" type="range" min="10" max="30" step="1" value="18"><span id="marginValue">18mm</span></label>
+          <label class="check-row"><input id="showIcons" type="checkbox" checked> Show contact icons</label>
+          <label class="check-row"><input id="compactMode" type="checkbox"> Compact spacing</label>
+          <div class="design-note"><span class="theme-swatch" aria-hidden="true"></span><div><strong>EIN theme</strong><span>Blue #447CE8 · Charcoal #2B2B2B</span></div></div>
+          <button id="resetDesign" class="danger-soft">Reset design</button>
+        </section>
+
+        <div class="sidebar-footer">
+          <span>Local-first</span>
+          <span id="saveState">Saved locally</span>
+        </div>
+      </aside>
+
+      <main class="editor-area">
+        <div class="editor-toolbar">
+          <span class="page-label"><strong id="pageSizeLabel">A4</strong> <span aria-hidden="true">•</span> <span id="pageCount">1 page</span></span>
+          <div class="zoom">
+            <button id="zoomOut">−</button><span id="zoomValue">85%</span><button id="zoomIn">＋</button>
+          </div>
+        </div>
+        <div class="paper-stage">
+          <article id="resumePaper" class="resume-paper"></article>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="sectionModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeModal" type="button" aria-label="Close">×</button>
+      <h2>Add a section</h2>
+      <p>Choose a section to add to your resume.</p>
+      <div class="section-options">
+        <button data-add="summary">Profile / Summary</button>
+        <button data-add="experience">Experience</button>
+        <button data-add="education">Education</button>
+        <button data-add="project">Projects</button>
+        <button data-add="skills">Skills</button>
+        <button data-add="languages">Languages</button>
+        <button data-add="certifications">Certifications</button>
+        <button data-add="custom">Custom section</button>
+      </div>
+    </div>
+  </div>
+
+  <template id="sectionEditorTemplate">
+    <div class="section-card">
+      <div class="section-card-head">
+        <span class="drag-handle">⠿</span>
+        <input class="section-title-input" value="Section">
+        <button class="collapse-btn">⌃</button>
+        <button class="delete-section">×</button>
+      </div>
+      <div class="section-card-body"></div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
