@@ -183,3 +183,65 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .paper-stage{padding:0;background:#fff}
   .resume-paper{box-shadow:none;border:0!important;margin:0;transform:none!important}
 }
+
+/* ===== Optional CV photo ===== */
+.photo-editor-block{margin-top:8px;padding:10px;border:1px solid #e1e6ed;background:#fbfcfe;border-radius:9px}
+.photo-editor-row{display:flex;gap:10px;align-items:center}
+.photo-editor-preview{width:58px;height:72px;border-radius:8px;overflow:hidden;display:grid;place-items:center;flex:0 0 auto;background:#f1f4f8;border:1px solid #dce2e9;color:#8b949f;font-size:9px}
+.photo-editor-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-editor-copy{min-width:0;flex:1}
+.photo-editor-copy>strong{display:block;font-size:11px;color:var(--ein-charcoal)}
+.photo-editor-copy>span{display:block;margin-top:2px;font-size:9px;color:#7a8490}
+.photo-editor-actions{display:flex;gap:6px;align-items:center;margin-top:7px}
+.mini-upload{display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 8px;border:1px solid #cbd7ef;background:var(--ein-blue-soft);color:var(--ein-blue-dark);border-radius:7px;font-size:10px;font-weight:700;cursor:pointer}
+.mini-upload:hover{background:#e6efff;border-color:#b8cbee}
+.mini-upload input{display:none}
+.photo-error{display:block;min-height:12px;margin-top:4px;font-size:9px;color:#b42318}
+.resume-paper .cv-header.has-photo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start}
+.resume-paper .cv-header-copy{min-width:0;grid-column:1;grid-row:1}
+.resume-paper .cv-photo-wrap{width:var(--ein-photo-w,29mm);height:var(--ein-photo-h,36mm);border-radius:var(--ein-photo-radius,7px);overflow:hidden;border:1px solid #e0e4e9;background:#f4f5f7;justify-self:end;grid-column:2;grid-row:1;break-inside:avoid}
+.resume-paper .cv-photo{display:block;width:100%;height:100%;object-fit:cover}
+.template-minimal .cv-photo-wrap{border-radius:0}
+.template-creative .cv-photo-wrap{border-radius:10px}
+@media print{
+  .resume-paper .cv-photo{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .resume-paper .cv-header.has-photo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start}
+  .resume-paper .cv-header-copy{grid-column:1;grid-row:1;min-width:0}
+  .resume-paper .cv-photo-wrap{grid-column:2;grid-row:1;justify-self:end;width:var(--ein-photo-w,29mm);height:var(--ein-photo-h,36mm)}
+}
+@media(max-width:780px){
+  .resume-paper .cv-header.has-photo{grid-template-columns:1fr;row-gap:8px}
+  .resume-paper .cv-header-copy{grid-column:1;grid-row:1}
+  .resume-paper .cv-photo-wrap{grid-column:1;grid-row:2;justify-self:start;width:var(--ein-photo-w-mobile,25mm);height:var(--ein-photo-h-mobile,31mm)}
+}
+
+.photo-editor-block{border-top:1px solid #e8edf2;margin-top:10px;padding-top:10px}
+.profile-body .photo-editor-block{margin-bottom:4px}
+
+
+/* ===== EIN-CV typography and photo controls ===== */
+.design-group{margin:15px 0;padding:12px;border:1px solid #e1e6ec;border-radius:10px;background:#fbfcfd}
+.design-group-title{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:11px}
+.design-group-title strong{font-size:12px;color:var(--ein-charcoal,#2B2B2B)}
+.design-group-title span{font-size:9px;color:#8a929e}
+.design-grid-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.design-grid-two label{min-width:0}
+.design-group label{margin-bottom:10px}
+.design-group label:last-child{margin-bottom:0}
+.design-group input[type=range]{width:72%;vertical-align:middle}
+.resume-paper .name{font-size:var(--ein-name-size,28px);font-weight:var(--ein-name-weight,750);font-style:var(--ein-name-italic,normal)}
+.resume-paper .headline{font-size:var(--ein-headline-size,12px);font-weight:var(--ein-headline-weight,500);font-style:var(--ein-headline-italic,normal);text-transform:var(--ein-headline-transform,none)}
+.resume-paper .contact-line{font-size:var(--ein-contact-size,9px);font-weight:var(--ein-contact-weight,400);font-style:var(--ein-contact-italic,normal)}
+.resume-paper .cv-section-title{font-size:var(--ein-section-size,11px);font-weight:var(--ein-section-weight,800);text-transform:var(--ein-section-style,uppercase);border-bottom-width:var(--ein-section-border,1.3px)}
+.resume-paper .cv-item-body{font-size:var(--ein-description-size,10.5px);font-weight:var(--ein-description-weight,400);font-style:var(--ein-description-style,normal);line-height:var(--ein-description-line,1.38)}
+.resume-paper .cv-item-body li{font-size:inherit;font-weight:inherit;font-style:inherit;line-height:inherit}
+.resume-paper .skill-row{font-size:var(--ein-description-size,10.5px);font-weight:var(--ein-description-weight,400);font-style:var(--ein-description-style,normal);line-height:var(--ein-description-line,1.38)}
+.resume-paper .skill-label{font-weight:700}
+@media(max-width:780px){.design-grid-two{grid-template-columns:1fr}.resume-paper .cv-photo-wrap{width:var(--ein-photo-w-mobile,25mm);height:var(--ein-photo-h-mobile,31mm)}}
+
+/* EIN-CV print parity override: print view must match desktop preview even when print viewport triggers mobile breakpoints. */
+@media print{
+  .resume-paper .cv-header.has-photo{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:14px!important;align-items:start!important}
+  .resume-paper .cv-header-copy{grid-column:1!important;grid-row:1!important;min-width:0!important}
+  .resume-paper .cv-photo-wrap{grid-column:2!important;grid-row:1!important;justify-self:end!important;width:var(--ein-photo-w,29mm)!important;height:var(--ein-photo-h,36mm)!important}
+}

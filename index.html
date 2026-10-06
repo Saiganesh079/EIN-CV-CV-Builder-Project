@@ -80,6 +80,55 @@
           <label>Text color <span class="color-control"><input id="textColor" type="color" value="#2B2B2B"><code id="textHex">#2B2B2B</code></span></label>
           <label>Base font size <input id="fontSize" type="range" min="8" max="13" step=".25" value="10.5"><span id="fontSizeValue">10.5px</span></label>
           <label>Page margins <input id="marginSize" type="range" min="10" max="30" step="1" value="18"><span id="marginValue">18mm</span></label>
+
+          <div class="design-group">
+            <div class="design-group-title"><strong>Photo</strong><span>Header image</span></div>
+            <div class="design-grid-two">
+              <label>Height <input id="photoSize" type="range" min="20" max="55" step="1" value="36"><span id="photoSizeValue">36mm</span></label>
+              <label>Width <input id="photoWidth" type="range" min="18" max="42" step="1" value="29"><span id="photoWidthValue">29mm</span></label>
+            </div>
+            <label>Corner radius <input id="photoRadius" type="range" min="0" max="24" step="1" value="7"><span id="photoRadiusValue">7px</span></label>
+          </div>
+
+          <div class="design-group">
+            <div class="design-group-title"><strong>Header typography</strong><span>Name, title & contact</span></div>
+            <label>Name size <input id="nameSize" type="range" min="20" max="42" step="1" value="28"><span id="nameSizeValue">28px</span></label>
+            <div class="design-grid-two">
+              <label>Weight <select id="nameWeight"><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="750" selected>Extra Bold</option><option value="800">Black</option></select></label>
+              <label>Style <select id="nameStyle"><option value="normal" selected>Normal</option><option value="italic">Italic</option></select></label>
+            </div>
+            <label>Title size <input id="headlineSize" type="range" min="8" max="20" step=".5" value="12"><span id="headlineSizeValue">12px</span></label>
+            <div class="design-grid-two">
+              <label>Weight <select id="headlineWeight"><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select></label>
+              <label>Style <select id="headlineStyle"><option value="normal" selected>Normal</option><option value="italic">Italic</option><option value="uppercase">Uppercase</option></select></label>
+            </div>
+            <label>Contact size <input id="contactSize" type="range" min="7" max="14" step=".5" value="9"><span id="contactSizeValue">9px</span></label>
+            <div class="design-grid-two">
+              <label>Weight <select id="contactWeight"><option value="300">Light</option><option value="400" selected>Regular</option><option value="500">Medium</option><option value="600">Semibold</option></select></label>
+              <label>Style <select id="contactStyle"><option value="normal" selected>Normal</option><option value="italic">Italic</option></select></label>
+            </div>
+          </div>
+
+          <div class="design-group">
+            <div class="design-group-title"><strong>Section headings</strong><span>Professional Summary, Experience, etc.</span></div>
+            <label>Size <input id="sectionSize" type="range" min="8" max="16" step=".5" value="11"><span id="sectionSizeValue">11px</span></label>
+            <div class="design-grid-two">
+              <label>Weight <select id="sectionWeight"><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800" selected>Extra Bold</option></select></label>
+              <label>Style <select id="sectionStyle"><option value="uppercase" selected>Uppercase</option><option value="normal">Normal</option><option value="capitalize">Title Case</option><option value="lowercase">Lowercase</option></select></label>
+            </div>
+            <label class="check-row"><input id="sectionBorder" type="checkbox" checked> Divider line</label>
+          </div>
+
+          <div class="design-group">
+            <div class="design-group-title"><strong>Description & body</strong><span>Summary, details and bullet text</span></div>
+            <label>Size <input id="descriptionSize" type="range" min="8" max="13" step=".25" value="10.5"><span id="descriptionSizeValue">10.5px</span></label>
+            <label>Line height <input id="descriptionLine" type="range" min="1.1" max="1.8" step=".05" value="1.38"><span id="descriptionLineValue">1.38</span></label>
+            <div class="design-grid-two">
+              <label>Weight <select id="descriptionWeight"><option value="300">Light</option><option value="400" selected>Regular</option><option value="500">Medium</option><option value="600">Semibold</option></select></label>
+              <label>Style <select id="descriptionStyle"><option value="normal" selected>Normal</option><option value="italic">Italic</option></select></label>
+            </div>
+          </div>
+
           <label class="check-row"><input id="showIcons" type="checkbox" checked> Show contact icons</label>
           <label class="check-row"><input id="compactMode" type="checkbox"> Compact spacing</label>
           <div class="design-note"><span class="theme-swatch" aria-hidden="true"></span><div><strong>EIN theme</strong><span>Blue #447CE8 · Charcoal #2B2B2B</span></div></div>
