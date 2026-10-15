@@ -245,3 +245,168 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .resume-paper .cv-header-copy{grid-column:1!important;grid-row:1!important;min-width:0!important}
   .resume-paper .cv-photo-wrap{grid-column:2!important;grid-row:1!important;justify-self:end!important;width:var(--ein-photo-w,29mm)!important;height:var(--ein-photo-h,36mm)!important}
 }
+
+/* ===== DIRECT ON-CV EDITING ===== */
+.edit-mode-btn{display:flex;align-items:center;gap:6px}
+.edit-mode-btn.active{border-color:#c6d6f7;background:#f2f6ff;color:#285fcb}
+.edit-mode-state{font-size:9px;padding:2px 5px;border-radius:999px;background:#e8f0ff;color:#2f6fe4}
+.inline-edit-off .cv-inline-edit{outline:none!important;cursor:default!important}
+.cv-inline-edit{cursor:text;border-radius:3px;transition:background .12s ease,box-shadow .12s ease}
+.cv-inline-edit:hover{background:rgba(68,124,232,.06);box-shadow:inset 0 0 0 1px rgba(68,124,232,.10)}
+.cv-inline-edit.inline-editing,.cv-inline-edit:focus{background:#f7faff;box-shadow:inset 0 0 0 2px rgba(68,124,232,.28);outline:none}
+.cv-inline-edit[contenteditable="true"]{min-width:2px}
+.cv-section-title.cv-inline-edit{display:block}
+.cv-item-body.cv-inline-edit{white-space:pre-wrap}
+.cv-inline-edit br{user-select:none}
+@media print{
+  .edit-mode-btn,.cv-inline-edit{box-shadow:none!important;background:transparent!important;outline:none!important}
+}
+@media(max-width:780px){
+  .edit-mode-btn{display:none}
+}
+
+/* Whole-description inline editing: one editable block, not one bullet at a time. */
+.cv-description-edit{cursor:text}
+.cv-description-edit .cv-bullet-line{position:relative;padding-left:12px;min-height:1.2em}
+.cv-description-edit .cv-bullet-line::before{content:"•";position:absolute;left:0;top:0}
+.cv-description-edit.inline-editing .cv-bullet-line::before,
+.cv-description-edit:focus .cv-bullet-line::before{color:var(--ein-blue,#447CE8)}
+.cv-description-edit[contenteditable="true"]{white-space:normal}
+.cv-description-edit[contenteditable="true"] .cv-bullet-line{white-space:pre-wrap}
+
+/* ===== EIN-CV workspace redesign inspired by the supplied reference screens ===== */
+:root{--ein-blue:#447CE8;--ein-blue-deep:#3269d6;--ein-blue-pale:#edf3ff;--ein-charcoal:#2B2B2B;--ein-muted:#737d8b;--ein-border:#e4e7ec;--ein-canvas:#f4f5f7;--ein-purple-ink:#242034}
+body{background:var(--ein-canvas);color:var(--ein-charcoal)}
+.topbar{height:64px;gap:20px;padding:0 18px;background:#fff;border-bottom:1px solid var(--ein-border);box-shadow:0 1px 2px rgba(24,32,43,.025)}
+.brand{flex:0 0 auto;min-width:145px;gap:9px;color:var(--ein-charcoal);text-decoration:none}
+.ein-logo,.ein-logo img{width:38px;height:38px;object-fit:contain}
+.brand-copy strong{display:block;font-size:15px;line-height:1.1;letter-spacing:-.02em}.brand-copy span{display:block;margin-top:3px;font-size:10px;color:var(--ein-muted);font-weight:550}
+.primary-nav{display:flex;align-items:center;gap:5px;height:100%;flex:1;min-width:0}
+.primary-nav-item{position:relative;height:42px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:1px solid transparent;border-radius:10px;background:transparent;color:#626b78;font-size:13px;font-weight:650;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.primary-nav-item span{font-size:16px}.primary-nav-item:hover{background:#f7f9fc;color:var(--ein-charcoal)}
+.primary-nav-item.active{color:var(--ein-blue);background:var(--ein-blue-pale);border-color:#dce7ff}
+.primary-nav-item.active:after{content:"";position:absolute;bottom:-12px;left:13px;right:13px;height:2px;border-radius:2px;background:var(--ein-blue)}
+.top-actions{gap:6px;flex:0 0 auto}.icon-btn,.ghost-btn,.primary-btn{height:36px;border-radius:9px;border-color:#e0e4eb;background:#fff;color:#4b5563}.icon-btn{width:36px;padding:0}.primary-btn{background:var(--ein-blue);border-color:var(--ein-blue);color:white;box-shadow:0 3px 8px #447ce826}.primary-btn:hover{background:var(--ein-blue-deep)}
+.edit-mode-btn.active{background:var(--ein-blue-pale);border-color:#cbdcff;color:var(--ein-blue-deep)}
+.workspace{grid-template-columns:minmax(320px,390px) minmax(0,1fr);background:var(--ein-canvas);gap:0}
+.sidebar{background:var(--ein-canvas);border-right:1px solid #e7e9ee;overflow:hidden}
+.legacy-tabs{display:none!important}.tab-panel{padding:17px 16px 22px;scrollbar-gutter:stable;background:var(--ein-canvas)}
+.panel-heading{margin:1px 1px 17px}.panel-heading h2{font-size:18px;letter-spacing:-.025em;color:#252a33}.panel-heading p{font-size:12px;margin-top:5px;color:#7c8592}
+#profileEditor{border:1px solid var(--ein-border);border-radius:15px;box-shadow:0 2px 8px rgba(30,40,55,.035);margin-bottom:12px}
+#profileEditor .section-card-head{height:53px;padding:0 14px;background:white;border-bottom:1px solid #edf0f4}.profile-symbol{color:var(--ein-blue)}#profileEditor .section-card-body{padding:13px;background:#fff}
+.section-list{gap:11px}.section-card{border:1px solid var(--ein-border);border-radius:13px;box-shadow:0 2px 7px rgba(31,41,55,.035);background:white;transition:border-color .15s,box-shadow .15s}.section-card:hover{border-color:#d5dce7;box-shadow:0 3px 10px rgba(31,41,55,.05)}
+.section-card-head{height:51px;padding:0 12px;background:#fff;border-bottom:1px solid #eef0f4;gap:9px}.drag-handle{font-size:15px;color:#9aa3b0}.section-title-input{font-size:13px;color:#292e37}.collapse-btn,.delete-section{width:28px;height:28px}.section-card-body{padding:13px;background:white}.field{margin-bottom:12px}.field label,.tab-panel>label{font-size:11px;color:#566170;font-weight:700}.field input,.field textarea,.field select,.tab-panel>label input[type=text],.tab-panel>label select{border:1px solid #dce1e8;border-radius:9px;padding:10px 11px;min-height:40px;color:#303742;background:#fff;transition:border-color .15s,box-shadow .15s}.field textarea{min-height:88px}.field input:focus,.field textarea:focus,.field select:focus,.tab-panel>label select:focus{border-color:var(--ein-blue);box-shadow:0 0 0 3px #447ce81c}
+.item-row{border:1px solid #edf0f4;border-radius:10px;padding:11px;background:#fbfcfe}.add-item{height:39px;border:1px dashed #ccd5e2;border-radius:9px;color:#5d6877}.add-item:hover{background:var(--ein-blue-pale);border-color:#b8ccf7}.add-section{height:42px;border-radius:10px;background:var(--ein-blue);border-color:var(--ein-blue);box-shadow:0 3px 8px #447ce81f}.add-section:hover{background:var(--ein-blue-deep)}.quick-tools{gap:7px;margin-top:9px}.quick-tools button{border-radius:8px;padding:9px 4px;font-size:11px;color:#5a6472;background:white}
+.sidebar-footer{background:#fff;border-top:1px solid var(--ein-border);padding:12px 17px;color:#818b98;font-size:10px}
+.editor-area{background:#f0f2f5}.editor-toolbar{height:48px;background:#fff;border-bottom:1px solid var(--ein-border);padding:0 22px}.page-label{font-size:11px}.page-label strong{color:var(--ein-charcoal)}.zoom button{border-radius:7px}.zoom button:hover{background:var(--ein-blue-pale);color:var(--ein-blue)}
+.paper-stage{background:#f0f2f5;padding:30px 28px 50px}.resume-paper{border:1px solid #e5e8ed;box-shadow:0 8px 28px rgba(24,32,43,.09),0 1px 3px rgba(24,32,43,.035)}
+.design-group{border:1px solid #e4e8ef;border-radius:12px;background:white;padding:13px;margin:13px 0}.design-group-title{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}.design-group-title strong{font-size:12px;color:#303641}.design-group-title span{font-size:10px;color:#87909c}.design-note{border-radius:10px}.overview-panel{display:block}.overview-card{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid var(--ein-border);border-radius:14px;background:#fff;box-shadow:0 2px 8px rgba(31,41,55,.03)}.overview-icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:var(--ein-blue-pale);color:var(--ein-blue);font-size:18px}.overview-card strong{font-size:13px}.overview-card p,.overview-tip p{font-size:11px;line-height:1.55;color:#747e8b;margin:5px 0 0}.overview-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.overview-stat{padding:14px;border:1px solid var(--ein-border);border-radius:12px;background:white}.overview-stat span{display:block;font-size:10px;color:#7c8592}.overview-stat strong{display:block;font-size:21px;margin-top:5px;color:#2b3038}.overview-primary{margin:5px 0 8px}.overview-secondary{width:100%;border:1px solid #dce2ea;border-radius:10px;background:#fff;padding:11px 13px;color:#465160;font-weight:650;display:flex;justify-content:space-between}.overview-secondary:hover{background:var(--ein-blue-pale);border-color:#cad9f8}.overview-tip{margin-top:18px;padding:14px;border-radius:12px;background:#edf3ff;border:1px solid #dce7ff}.overview-tip strong{font-size:11px;color:#315fae}
+.hidden{display:none!important}
+@media(max-width:1120px){.topbar{gap:10px;padding:0 12px}.brand{min-width:110px}.primary-nav-item{padding:0 10px}.workspace{grid-template-columns:330px minmax(0,1fr)}.top-actions .edit-mode-btn{display:none}}
+@media(max-width:780px){.topbar{height:auto;min-height:64px;flex-wrap:wrap;padding:8px 10px;gap:7px}.brand{min-width:100px}.primary-nav{order:3;flex-basis:100%;height:42px;justify-content:center;border-top:1px solid #f0f1f4}.primary-nav-item{flex:1;height:36px;font-size:12px}.primary-nav-item.active:after{bottom:-4px}.top-actions{margin-left:auto}.top-actions .ghost-btn{display:none}.workspace{display:flex;flex-direction:column}.sidebar{position:relative;top:auto;left:auto;bottom:auto;width:100%;transform:none;border-right:0;border-bottom:1px solid var(--ein-border);max-height:56vh}.sidebar.open{max-height:75vh}.editor-area{min-height:65vh}.paper-stage{padding:16px 8px}.resume-paper{transform-origin:top center}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* ===== REAL MULTI-PAGE CV PREVIEW + PRINT ===== */
+#resumePaper.resume-paper{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:18px!important;
+  width:var(--ein-page-width,210mm)!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0 auto!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transform-origin:top center;
+}
+#resumePaper .resume-page{
+  display:block;
+  flex:0 0 auto;
+  box-sizing:border-box;
+  width:var(--ein-page-width,210mm);
+  height:var(--ein-page-height,297mm);
+  min-height:var(--ein-page-height,297mm);
+  max-height:none;
+  padding:var(--ein-margin-mm,18mm);
+  margin:0;
+  position:relative;
+  background:#fff;
+  border:1px solid #e1e5ea;
+  box-shadow:0 8px 28px rgba(43,43,43,.10),0 1px 2px rgba(43,43,43,.05);
+  overflow:visible;
+  color:inherit;
+  font:inherit;
+}
+#resumePaper .resume-page-content{
+  display:flow-root;
+  box-sizing:border-box;
+  width:100%;
+  min-height:0;
+  height:auto;
+  overflow:visible;
+}
+#resumePaper .resume-page-content > .cv-section:first-child{margin-top:0}
+#resumePaper .cv-section,
+#resumePaper .cv-item,
+#resumePaper .cv-item-head,
+#resumePaper .cv-item-body,
+#resumePaper .skill-row{max-width:100%;box-sizing:border-box}
+#resumePaper .cv-section-title,
+#resumePaper .cv-item-title,
+#resumePaper .cv-item-sub,
+#resumePaper .cv-item-meta,
+#resumePaper .skill-row{overflow-wrap:anywhere}
+#resumePaper .cv-item-meta{flex-shrink:0}
+#resumePaper .cv-item-head > :first-child{min-width:0}
+#resumePaper .cv-photo-wrap{break-inside:avoid;page-break-inside:avoid}
+#resumePaper .resume-page [data-oversize="true"]{overflow:visible}
+@media print{
+  @page{margin:0}
+  html,body{
+    width:auto!important;height:auto!important;min-height:0!important;
+    margin:0!important;padding:0!important;overflow:visible!important;
+    background:#fff!important;
+  }
+  body,.app-shell,.workspace,.editor-area,.paper-stage{
+    display:block!important;position:static!important;
+    width:auto!important;height:auto!important;min-height:0!important;
+    max-height:none!important;overflow:visible!important;
+    margin:0!important;padding:0!important;
+    border:0!important;background:#fff!important;
+  }
+  .topbar,.sidebar,.editor-toolbar,.modal,.mobile-menu-btn{display:none!important}
+  #resumePaper.resume-paper{
+    display:block!important;position:static!important;
+    width:auto!important;height:auto!important;min-height:0!important;
+    margin:0!important;padding:0!important;gap:0!important;
+    transform:none!important;overflow:visible!important;
+    border:0!important;box-shadow:none!important;background:transparent!important;
+  }
+  #resumePaper .resume-page{
+    display:block!important;position:relative!important;
+    width:var(--ein-page-width,210mm)!important;
+    height:var(--ein-page-height,297mm)!important;
+    min-height:var(--ein-page-height,297mm)!important;
+    max-height:none!important;box-sizing:border-box!important;
+    margin:0!important;padding:var(--ein-margin-mm,18mm)!important;
+    border:0!important;box-shadow:none!important;background:#fff!important;
+    overflow:visible!important;
+    page-break-after:always!important;break-after:page!important;
+  }
+  #resumePaper .resume-page:last-child{
+    page-break-after:auto!important;break-after:auto!important;
+  }
+  #resumePaper .resume-page-content{
+    display:flow-root!important;width:100%!important;height:auto!important;
+    min-height:0!important;overflow:visible!important;
+  }
+  #resumePaper .cv-section{break-inside:auto;page-break-inside:auto}
+  #resumePaper .cv-item{break-inside:avoid;page-break-inside:avoid}
+  #resumePaper .cv-item-body ul{orphans:2;widows:2}
+  #resumePaper .cv-inline-edit{outline:none!important;box-shadow:none!important;background:transparent!important}
+}

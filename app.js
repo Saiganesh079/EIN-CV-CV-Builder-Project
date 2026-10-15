@@ -45,7 +45,7 @@ function save(){
 }
 function load(){try{const raw=localStorage.getItem("ein-cv:data:v1")||localStorage.getItem("cvbuilder-data");if(!raw)return null;const x=JSON.parse(raw);if(!x||typeof x!=="object"||!x.meta||!x.design||!Array.isArray(x.sections))return null;return x}catch{return null}}
 function mutate(fn){snapshot();fn();renderAll();save()}
-function renderAll(){renderControls();renderProfileEditor();renderSectionEditor();renderPaper();applyZoom()}
+function renderAll(){renderControls();renderProfileEditor();renderSectionEditor();renderPaper();applyZoom();updateOverview()}
 function setControl(id,value,labelId,suffix=""){
  const el=$(id);if(el)el.value=value;
  const lab=labelId?$(labelId):null;if(lab)lab.textContent=value+suffix;
@@ -177,12 +177,125 @@ function buildSectionForm(sec,body){
  });
  const add=document.createElement("button");add.className="add-item";add.textContent="＋ Add item";add.onclick=()=>mutate(()=>sec.items.push(sec.type==="education"?{degree:"Degree",school:"University",location:"City, Country",dates:"Year",details:""}:{role:"Position",company:"Organization",location:"City, Country",dates:"Month Year – Month Year",bullets:["Achievement or responsibility"]}));body.appendChild(add);
 }
+
+let inlineEditEnabled = true;
+let inlineUndoActive = false;
+let inlineSaveTimer = null;
+
+function inlineText(v){ return String(v ?? ""); }
+function setNestedInlineValue(el){
+ const kind=el.dataset.inlineKind, field=el.dataset.inlineField;
+ const secId=el.dataset.inlineSection;
+ if(kind==="meta"){
+   data.meta[field]=inlineText(el.innerText);
+ } else {
+   const sec=data.sections.find(x=>x.id===secId);
+   if(!sec) return;
+   if(kind==="section"){ sec.title=inlineText(el.innerText); }
+   else if(kind==="item"){
+     const item=sec.items?.[Number(el.dataset.inlineIndex)];
+     if(item) item[field]=inlineText(el.innerText);
+   } else if(kind==="bullets"){
+     const item=sec.items?.[Number(el.dataset.inlineIndex)];
+     if(item){
+       item.bullets=inlineText(el.innerText).split(/\n+/).map(v=>v.replace(/^\s*[•·-]\s*/,"").trim()).filter(Boolean);
+     }
+   } else if(kind==="bullet"){
+     const item=sec.items?.[Number(el.dataset.inlineIndex)];
+     const bi=Number(el.dataset.inlineBulletIndex);
+     if(item && Array.isArray(item.bullets))item.bullets[bi]=inlineText(el.innerText);
+   } else if(kind==="skill"){
+     const group=sec.groups?.[Number(el.dataset.inlineIndex)];
+     if(group) group[field]=inlineText(el.innerText);
+   } else if(kind==="language"){
+     const item=sec.items?.[Number(el.dataset.inlineIndex)];
+     if(item) item[field]=inlineText(el.innerText);
+   } else if(kind==="certification"){
+     const item=sec.items?.[Number(el.dataset.inlineIndex)];
+     if(item) item[field]=inlineText(el.innerText);
+   }
+ }
+ clearTimeout(inlineSaveTimer);
+ inlineSaveTimer=setTimeout(save,350);
+}
+
+function beginInlineEdit(el){
+ if(!inlineEditEnabled || el.dataset.inlineLocked==="true") return;
+ if(!inlineUndoActive){ snapshot(); inlineUndoActive=true; }
+ el.classList.add("inline-editing");
+ if(el.dataset.inlineSingle==="true"){
+   document.execCommand?.("selectAll",false,null);
+ }
+}
+
+function endInlineEdit(el){
+ el.classList.remove("inline-editing");
+ setNestedInlineValue(el);
+ inlineUndoActive=false;
+ renderPaper();
+ applyInlineEditing();
+ save();
+}
+
+function inlineKeydown(e){
+ if(!inlineEditEnabled) return;
+ const el=e.currentTarget;
+ if(e.key==="Escape"){
+   e.preventDefault();
+   renderPaper();
+   applyInlineEditing();
+   return;
+ }
+ if(e.key==="Enter" && el.dataset.inlineSingle==="true"){
+   e.preventDefault();
+   el.blur();
+ }
+}
+
+function applyInlineEditing(){
+ const paper=$("#resumePaper");
+ if(!paper) return;
+ const nodes=paper.querySelectorAll("[data-inline-kind]");
+ nodes.forEach(el=>{
+   const editable=inlineEditEnabled && el.dataset.inlineLocked!=="true";
+   el.setAttribute("contenteditable",editable?"true":"false");
+   el.setAttribute("role","textbox");
+   el.setAttribute("spellcheck","true");
+   if(editable){
+     el.classList.add("cv-inline-edit");
+     el.onfocus=()=>beginInlineEdit(el);
+     el.oninput=()=>setNestedInlineValue(el);
+     el.onblur=()=>endInlineEdit(el);
+     el.onkeydown=inlineKeydown;
+   }else{
+     el.classList.remove("cv-inline-edit","inline-editing");
+     el.onfocus=null;el.oninput=null;el.onblur=null;el.onkeydown=null;
+   }
+ });
+}
+
+function initInlineEditUI(){
+ const btn=$("#inlineEditBtn");
+ if(!btn) return;
+ const sync=()=>{
+   btn.setAttribute("aria-pressed",String(inlineEditEnabled));
+   btn.classList.toggle("active",inlineEditEnabled);
+   const st=btn.querySelector(".edit-mode-state");if(st)st.textContent=inlineEditEnabled?"On":"Off";
+   document.documentElement.classList.toggle("inline-edit-off",!inlineEditEnabled);
+   applyInlineEditing();
+ };
+ btn.onclick=()=>{inlineEditEnabled=!inlineEditEnabled;inlineUndoActive=false;sync();};
+ sync();
+}
+
 function renderPaper(){
  const p=$("#resumePaper"),d=data.design,m=data.meta;
  p.style.setProperty("--accent",d.accent);p.style.color=d.text;p.style.fontFamily=d.font==="Inter"?"Inter,Arial,sans-serif":d.font;
- p.style.fontSize=d.fontSize+"px";p.style.padding=d.margin+"mm";
+ p.style.fontSize=d.fontSize+"px";p.style.padding="0";p.style.minHeight="0";
  p.style.width=d.pageSize==="LETTER"?"8.5in":"210mm";
- p.style.minHeight=d.pageSize==="LETTER"?"11in":"297mm";
+ p.style.setProperty("--ein-page-width",d.pageSize==="LETTER"?"8.5in":"210mm");
+ p.style.setProperty("--ein-page-height",d.pageSize==="LETTER"?"11in":"297mm");
+ p.style.setProperty("--ein-margin-mm",d.margin+"mm");
  p.className=`resume-paper template-${d.template}${d.compact?" compact":""}`;
  p.style.setProperty("--ein-photo-w",d.photoWidth+"mm");p.style.setProperty("--ein-photo-h",d.photoSize+"mm");p.style.setProperty("--ein-photo-radius",d.photoRadius+"px");
  p.style.setProperty("--ein-name-size",d.nameSize+"px");p.style.setProperty("--ein-name-weight",d.nameWeight);p.style.setProperty("--ein-name-italic",d.nameStyle==="italic"?"italic":"normal");
@@ -190,36 +303,176 @@ function renderPaper(){
  p.style.setProperty("--ein-contact-size",d.contactSize+"px");p.style.setProperty("--ein-contact-weight",d.contactWeight);p.style.setProperty("--ein-contact-italic",d.contactStyle==="italic"?"italic":"normal");
  p.style.setProperty("--ein-section-size",d.sectionSize+"px");p.style.setProperty("--ein-section-weight",d.sectionWeight);p.style.setProperty("--ein-section-style",d.sectionStyle);p.style.setProperty("--ein-section-border",d.sectionBorder?"1.3px":"0");
  p.style.setProperty("--ein-description-size",d.descriptionSize+"px");p.style.setProperty("--ein-description-weight",d.descriptionWeight);p.style.setProperty("--ein-description-style",d.descriptionStyle);p.style.setProperty("--ein-description-line",d.descriptionLine);
+
  const contactParts=[];
-if(m.email)contactParts.push(`<span>${d.icons?"✉ ":""}<a href="${esc("mailto:"+m.email)}"> ${esc(m.email)}</a></span>`);
-if(m.phone)contactParts.push(`<span>${d.icons?"☎ ":""}<a href="${esc("tel:"+m.phone.replace(/[^+\\d]/g,""))}">${esc(m.phone)}</a></span>`);
-if(m.location)contactParts.push(`<span>${d.icons?"⌖ ":""}${esc(m.location)}</span>`);
-if(m.website)contactParts.push(`<span>${d.icons?"↗ ":""}<a href="${esc(hrefUrl(m.website))}" target="_blank" rel="noopener noreferrer">Portfolio</a></span>`);
-if(m.linkedin)contactParts.push(`<span>${d.icons?"in ":""}<a href="${esc(hrefUrl(m.linkedin))}" target="_blank" rel="noopener noreferrer">LinkedIn</a></span>`);
-const contact=contactParts.join("");
+ if(m.email)contactParts.push(`<span>${d.icons?"✉ ":""}<a href="${esc("mailto:"+m.email)}"><span data-inline-kind="meta" data-inline-field="email" data-inline-single="true">${esc(m.email)}</span></a></span>`);
+ if(m.phone)contactParts.push(`<span>${d.icons?"☎ ":""}<a href="${esc("tel:"+m.phone.replace(/[^+\\d]/g,""))}"><span data-inline-kind="meta" data-inline-field="phone" data-inline-single="true">${esc(m.phone)}</span></a></span>`);
+ if(m.location)contactParts.push(`<span>${d.icons?"⌖ ":""}<span data-inline-kind="meta" data-inline-field="location" data-inline-single="true">${esc(m.location)}</span></span>`);
+ if(m.website)contactParts.push(`<span>${d.icons?"↗ ":""}<a class="cv-link-fixed" href="${esc(hrefUrl(m.website))}" target="_blank" rel="noopener noreferrer">Portfolio</a></span>`);
+ if(m.linkedin)contactParts.push(`<span>${d.icons?"in ":""}<a class="cv-link-fixed" href="${esc(hrefUrl(m.linkedin))}" target="_blank" rel="noopener noreferrer">LinkedIn</a></span>`);
+ const contact=contactParts.join("");
  const photoHtml=m.photo?`<div class="cv-photo-wrap"><img class="cv-photo" src="${esc(m.photo)}" alt="Profile photo"></div>`:"";
- let html=`<header class="cv-header${m.photo?" has-photo":""}">${photoHtml}<div class="cv-header-copy"><h1 class="name">${esc(m.name)}</h1><div class="headline">${esc(m.headline)}</div><div class="contact-line">${contact}</div></div></header>`;
- data.sections.forEach(sec=>{html+=renderSection(sec)});
- p.innerHTML=html;
- const pagePx=d.pageSize==="LETTER"?1056:1123;
- const pages=Math.max(1,Math.ceil(p.scrollHeight/pagePx));
- $("#pageCount").textContent=pages+" page"+(pages===1?"":"s");
+ const headerHtml=`<header class="cv-header${m.photo?" has-photo":""}"><div class="cv-header-copy"><h1 class="name" data-inline-kind="meta" data-inline-field="name" data-inline-single="true">${esc(m.name)}</h1><div class="headline" data-inline-kind="meta" data-inline-field="headline">${esc(m.headline)}</div><div class="contact-line">${contact}</div></div>${photoHtml}</header>`;
+ let sectionsHtml="";
+ data.sections.forEach(sec=>{sectionsHtml+=renderSection(sec)});
+
+ // The editor and print/PDF share the same measured page sheets.
+ const parsed=document.createElement("div");
+ parsed.innerHTML=headerHtml+sectionsHtml;
+ const header=parsed.querySelector(".cv-header");
+ const sections=[...parsed.querySelectorAll(".cv-section")];
+ p.innerHTML="";
+ const pageWidth=d.pageSize==="LETTER"?"8.5in":"210mm";
+ const pageHeight=d.pageSize==="LETTER"?"11in":"297mm";
+ const pageHeightPx=d.pageSize==="LETTER"?1056:1122.52;
+ const marginPx=(Number(d.margin)||0)*96/25.4;
+ const usableHeight=Math.max(100,pageHeightPx-2*marginPx-2);
+
+ let pages=[];
+ const makePage=()=>{
+   const page=document.createElement("div");
+   page.className="resume-page";
+   page.style.width=pageWidth;
+   page.style.height=pageHeight;
+   page.style.padding=`${d.margin}mm`;
+   page.dataset.pageIndex=pages.length+1;
+   const content=document.createElement("div");
+   content.className="resume-page-content";
+   page.appendChild(content);
+   p.appendChild(page);
+   const record={page,content};
+   pages.push(record);
+   return record;
+ };
+ const currentHeight=record=>record.content.scrollHeight;
+ const overflows=record=>currentHeight(record)>usableHeight+1;
+ let current=makePage();
+ if(header)current.content.appendChild(header);
+
+ for(const section of sections){
+   const title=section.querySelector(".cv-section-title");
+   const blocks=[...section.children].filter(node=>node!==title);
+   if(!title && !blocks.length)continue;
+   let sectionOnPage=null;
+   const startSection=(record,cloneTitle=true)=>{
+     const sec=document.createElement("section");
+     sec.className="cv-section";
+     if(title && cloneTitle)sec.appendChild(title.cloneNode(true));
+     record.content.appendChild(sec);
+     return sec;
+   };
+   sectionOnPage=startSection(current,true);
+
+   if(blocks.length===0){
+     if(overflows(current) && current.content.children.length>1){
+       sectionOnPage.remove();
+       current=makePage();
+       sectionOnPage=startSection(current,true);
+     }
+     continue;
+   }
+
+   for(const block of blocks){
+     sectionOnPage.appendChild(block);
+     if(overflows(current)){
+       block.remove();
+       const emptySection=sectionOnPage.children.length<=1;
+       if(emptySection)sectionOnPage.remove();
+
+       // Move this entry to the next sheet instead of letting it be clipped
+       // or creating an unintentional trailing blank page.
+       current=makePage();
+       sectionOnPage=startSection(current,true);
+       sectionOnPage.appendChild(block);
+
+       // A single exceptionally tall entry is allowed to flow, rather than
+       // hiding its content. The following entry will begin on the next page.
+       if(overflows(current)){
+         block.dataset.oversize="true";
+       }
+     }
+   }
+ }
+ if(!pages.length)current=makePage();
+
+ // Inline edit mode and page indicators operate across all generated sheets.
+ const count=pages.length;
+ $("#pageCount").textContent=count+" page"+(count===1?"":"s");
  $("#pageSizeLabel").textContent=d.pageSize==="LETTER"?"Letter":"A4";
  if($("#accentHex"))$("#accentHex").textContent=String(d.accent).toUpperCase();
  if($("#textHex"))$("#textHex").textContent=String(d.text).toUpperCase();
+ applyInlineEditing();
+}
+
+function clean(v){return String(v??"").trim()}
+function hasSectionContent(sec){
+ if(!sec || !clean(sec.title))return false;
+ if(sec.type==="summary" || (sec.type==="custom" && sec.body!==undefined))return !!clean(sec.body);
+ if(sec.type==="skills")return (sec.groups||[]).some(g=>clean(g.label)||clean(g.value));
+ if(sec.type==="languages")return (sec.items||[]).some(x=>clean(x.language)||clean(x.level));
+ if(sec.type==="certifications")return (sec.items||[]).some(x=>clean(x.name)||clean(x.meta));
+ return (sec.items||[]).some(item=>{
+   if(sec.type==="education")return [item.degree,item.school,item.location,item.dates,item.details].some(clean);
+   if(sec.type==="project")return [item.name,item.role,item.link,...(item.bullets||[])].some(clean);
+   return [item.role,item.company,item.location,item.dates,...(item.bullets||[])].some(clean);
+ });
+}
+function renderDescriptionBlock(secId,index,bullets){
+ const lines=(bullets||[]).map(clean).filter(Boolean);
+ if(!lines.length)return "";
+ return `<div class="cv-item-body cv-description-edit" data-inline-kind="bullets" data-inline-section="${esc(secId)}" data-inline-index="${index}">${lines.map(line=>`<div class="cv-bullet-line">${esc(line)}</div>`).join("")}</div>`;
 }
 function renderSection(sec){
- let h=`<section class="cv-section"><div class="cv-section-title">${esc(sec.title)}</div>`;
- if(sec.type==="summary"||sec.type==="custom"&&sec.body!==undefined)return h+`<div class="cv-item-body">${esc(sec.body).replace(/\n/g,"<br>")}</div></section>`;
- if(sec.type==="skills")return h+(sec.groups||[]).map(g=>`<div class="skill-row"><span class="skill-label">${esc(g.label)}:</span> ${esc(g.value)}</div>`).join("")+"</section>";
- if(sec.type==="languages")return h+(sec.items||[]).map(x=>`<div class="skill-row"><span class="skill-label">${esc(x.language)}:</span> ${esc(x.level)}</div>`).join("")+"</section>";
- if(sec.type==="certifications")return h+(sec.items||[]).map(x=>`<div class="cv-item"><div class="cv-item-head"><div class="cv-item-title">${esc(x.name)}</div><div class="cv-item-meta">${esc(x.meta)}</div></div></div>`).join("")+"</section>";
- return h+(sec.items||[]).map(item=>{
-  const title=sec.type==="education"?item.degree:item.role, sub=sec.type==="education"?item.school:item.company;
-  const details=sec.type==="education"?`<div class="cv-item-body">${esc(item.details||"").replace(/\n/g,"<br>")}</div>`:`<div class="cv-item-body"><ul>${(item.bullets||[]).map(b=>`<li>${esc(b)}</li>`).join("")}</ul></div>`;
-  return `<div class="cv-item"><div class="cv-item-head"><div><div class="cv-item-title">${esc(title)}</div><div class="cv-item-sub">${esc(sub)}${item.location?" · "+esc(item.location):""}</div></div><div class="cv-item-meta">${esc(item.dates)}</div></div>${details}</div>`
+ if(!hasSectionContent(sec))return "";
+ const titleStyle=` data-inline-kind="section" data-inline-section="${esc(sec.id)}" data-inline-single="true"`;
+ let h=`<section class="cv-section"><div class="cv-section-title"${titleStyle}>${esc(sec.title)}</div>`;
+ if(sec.type==="summary" || (sec.type==="custom"&&sec.body!==undefined)){
+   return h+`<div class="cv-item-body" data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-field="body">${esc(sec.body||"").replace(/\n/g,"<br>")}</div></section>`;
+ }
+ if(sec.type==="skills"){
+   const groups=(sec.groups||[]).filter(g=>clean(g.label)||clean(g.value));
+   if(!groups.length)return "";
+   return h+groups.map((g)=>`<div class="skill-row">${clean(g.label)?`<span class="skill-label" data-inline-kind="skill" data-inline-section="${esc(sec.id)}" data-inline-index="${sec.groups.indexOf(g)}" data-inline-field="label" data-inline-single="true">${esc(g.label)}</span>`:""}${clean(g.label)&&clean(g.value)?": ":""}${clean(g.value)?`<span data-inline-kind="skill" data-inline-section="${esc(sec.id)}" data-inline-index="${sec.groups.indexOf(g)}" data-inline-field="value">${esc(g.value)}</span>`:""}</div>`).join("")+"</section>";
+ }
+ if(sec.type==="languages"){
+   const items=(sec.items||[]).filter(x=>clean(x.language)||clean(x.level));
+   if(!items.length)return "";
+   return h+items.map((x)=>`<div class="skill-row">${clean(x.language)?`<span class="skill-label" data-inline-kind="language" data-inline-section="${esc(sec.id)}" data-inline-index="${sec.items.indexOf(x)}" data-inline-field="language" data-inline-single="true">${esc(x.language)}</span>`:""}${clean(x.language)&&clean(x.level)?": ":""}${clean(x.level)?`<span data-inline-kind="language" data-inline-section="${esc(sec.id)}" data-inline-index="${sec.items.indexOf(x)}" data-inline-field="level" data-inline-single="true">${esc(x.level)}</span>`:""}</div>`).join("")+"</section>";
+ }
+ if(sec.type==="certifications"){
+   const items=(sec.items||[]).filter(x=>clean(x.name)||clean(x.meta));
+   if(!items.length)return "";
+   return h+items.map((x)=>`<div class="cv-item"><div class="cv-item-head">${clean(x.name)?`<div class="cv-item-title" data-inline-kind="certification" data-inline-section="${esc(sec.id)}" data-inline-index="${sec.items.indexOf(x)}" data-inline-field="name" data-inline-single="true">${esc(x.name)}</div>`:""}${clean(x.meta)?`<div class="cv-item-meta" data-inline-kind="certification" data-inline-section="${esc(sec.id)}" data-inline-index="${sec.items.indexOf(x)}" data-inline-field="meta" data-inline-single="true">${esc(x.meta)}</div>`:""}</div></div>`).join("")+"</section>";
+ }
+ if(sec.type==="project"){
+   const items=(sec.items||[]).map((item,i)=>({item,i})).filter(({item})=>[item.name,item.role,item.link,...(item.bullets||[])].some(clean));
+   if(!items.length)return "";
+   return h+items.map(({item,i})=>{
+     const role=clean(item.role), link=clean(item.link);
+     const title=clean(item.name);
+     const bullets=renderDescriptionBlock(sec.id,i,item.bullets);
+     return `<div class="cv-item">
+       ${title||role||link?`<div class="cv-item-head"><div>${title?`<div class="cv-item-title" data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="name" data-inline-single="true">${esc(item.name)}</div>`:""}${role?`<div class="cv-item-sub" data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="role">${esc(item.role)}</div>`:""}</div>${link?`<div class="cv-item-meta"><a class="cv-link-fixed" href="${esc(hrefUrl(item.link))}" target="_blank" rel="noopener noreferrer">View project</a></div>`:""}</div>`:""}${bullets}</div>`;
+   }).join("")+"</section>";
+ }
+ const items=(sec.items||[]).map((item,i)=>({item,i})).filter(({item})=>{
+   if(sec.type==="education")return [item.degree,item.school,item.location,item.dates,item.details].some(clean);
+   return [item.role,item.company,item.location,item.dates,...(item.bullets||[])].some(clean);
+ });
+ if(!items.length)return "";
+ return h+items.map(({item,i})=>{
+   const titleField=sec.type==="education"?"degree":"role",subField=sec.type==="education"?"school":"company";
+   const title=clean(sec.type==="education"?item.degree:item.role),sub=clean(sec.type==="education"?item.school:item.company),location=clean(item.location),dates=clean(item.dates);
+   const body=sec.type==="education"
+     ?(clean(item.details)?`<div class="cv-item-body" data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="details">${esc(item.details).replace(/\n/g,"<br>")}</div>`:"")
+     :renderDescriptionBlock(sec.id,i,item.bullets);
+   const head=title||sub||location||dates
+     ?`<div class="cv-item-head"><div>${title?`<div class="cv-item-title" data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="${titleField}" data-inline-single="true">${esc(sec.type==="education"?item.degree:item.role)}</div>`:""}${sub||location?`<div class="cv-item-sub">${sub?`<span data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="${subField}" data-inline-single="true">${esc(sec.type==="education"?item.school:item.company)}</span>`:""}${sub&&location?" · ":""}${location?`<span data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="location" data-inline-single="true">${esc(item.location)}</span>`:""}</div>`:""}</div>${dates?`<div class="cv-item-meta" data-inline-kind="item" data-inline-section="${esc(sec.id)}" data-inline-index="${i}" data-inline-field="dates" data-inline-single="true">${esc(item.dates)}</div>`:""}</div>`
+     :"";
+   return `<div class="cv-item">${head}${body}</div>`;
  }).join("")+"</section>";
 }
+
 function addSection(type){
  const defs={
  summary:{title:"Professional Summary",body:"Write a concise professional summary."},
@@ -307,6 +560,24 @@ function makeDocx(){
  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(m.name||"CV").replace(/[^a-z0-9_-]+/gi,"_")+"_CV.docx";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
 }
 
+function updateOverview(){
+ const page=$("#overviewPageFormat"),count=$("#overviewSectionCount");
+ if(page)page.textContent=data.design.pageSize==="LETTER"?"Letter":"A4";
+ if(count)count.textContent=String(data.sections.filter(sec=>String(sec.title||"").trim()).length);
+}
+function setWorkspaceView(view){
+ const overview=view==="overview",customize=view==="customize";
+ $("#overviewTab").classList.toggle("hidden",!overview);
+ $("#contentTab").classList.toggle("hidden",overview||customize);
+ $("#designTab").classList.toggle("hidden",!customize);
+ $$(".primary-nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+ if(customize){$$(".side-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab==="design"));}
+ else {$$(".side-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab==="content"));}
+ if(view==="overview")updateOverview();
+}
+$$(".primary-nav-item").forEach(b=>b.addEventListener("click",()=>setWorkspaceView(b.dataset.view)));
+$("#overviewEditBtn")?.addEventListener("click",()=>setWorkspaceView("content"));
+$("#overviewCustomizeBtn")?.addEventListener("click",()=>setWorkspaceView("customize"));
 function applyZoom(){$("#resumePaper").style.transform=`scale(${zoom})`;$("#zoomValue").textContent=Math.round(zoom*100)+"%"}
 $$(".side-tab").forEach(b=>b.onclick=()=>{$$(".side-tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");$("#contentTab").classList.toggle("hidden",b.dataset.tab!=="content");$("#designTab").classList.toggle("hidden",b.dataset.tab!=="design")});
 $("#addSectionBtn").onclick=()=>$("#sectionModal").classList.remove("hidden");$("#closeModal").onclick=()=>$("#sectionModal").classList.add("hidden");
@@ -329,7 +600,13 @@ bindRange("#descriptionSize","descriptionSize","#descriptionSizeValue","px");bin
 $("#resetDesign").onclick=()=>mutate(()=>data.design=clone(defaultData.design));
 $("#zoomIn").onclick=()=>{zoom=Math.min(1.25,zoom+.05);applyZoom()};$("#zoomOut").onclick=()=>{zoom=Math.max(.55,zoom-.05);applyZoom()};
 $("#saveBtn").onclick=save;
-$("#printBtn").onclick=()=>{let st=document.getElementById("printSizeStyle");if(!st){st=document.createElement("style");st.id="printSizeStyle";document.head.appendChild(st)}st.textContent=`@media print{@page{size:${data.design.pageSize};margin:0}}`;window.print()};
+$("#printBtn").onclick=()=>{
+  renderPaper();
+  const st=document.getElementById("printSizeStyle");
+  if(!st){const node=document.createElement("style");node.id="printSizeStyle";document.head.appendChild(node)}
+  document.getElementById("printSizeStyle").textContent=`@media print{@page{size:${data.design.pageSize==="LETTER"?"Letter":"A4"};margin:0}}`;
+  window.print();
+};
 $("#docxBtn").onclick=makeDocx;
 $("#undoBtn").onclick=()=>{if(!history.length)return;future.push(JSON.stringify(data));data=normalizeData(JSON.parse(history.pop()));renderAll();save()};
 $("#redoBtn").onclick=()=>{if(!future.length)return;history.push(JSON.stringify(data));data=normalizeData(JSON.parse(future.pop()));renderAll();save()};
@@ -339,6 +616,13 @@ $("#brandHome").onclick=e=>{e.preventDefault();window.scrollTo({top:0,behavior:"
 document.addEventListener("keydown",e=>{const mod=e.ctrlKey||e.metaKey;if(!mod)return;if(e.key.toLowerCase()==="s"){e.preventDefault();save()}if(e.key.toLowerCase()==="z"){e.preventDefault();if(e.shiftKey)$("#redoBtn").click();else $("#undoBtn").click()}if(e.key.toLowerCase()==="y"){e.preventDefault();$("#redoBtn").click()}});
 const motionQuery=window.matchMedia("(prefers-reduced-motion: reduce)");document.documentElement.classList.toggle("reduced-motion",motionQuery.matches);motionQuery.addEventListener?.("change",e=>document.documentElement.classList.toggle("reduced-motion",e.matches));
 window.addEventListener("beforeunload",save);
+document.addEventListener("click",e=>{
+ const link=e.target.closest(".cv-link-fixed");
+ if(link && inlineEditEnabled && !(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)){
+   e.preventDefault();
+ }
+});
+initInlineEditUI();
 renderAll();
 
 /* EIN-CV mobile / interaction helpers */

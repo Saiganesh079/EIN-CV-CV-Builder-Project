@@ -16,11 +16,17 @@
         <span class="ein-logo" aria-hidden="true"><img src="ein-logo.png" alt=""></span>
         <span class="brand-copy"><strong>EIN-CV</strong><span>CV Builder</span></span>
       </a>
+      <nav class="primary-nav" aria-label="Main navigation">
+        <button type="button" class="primary-nav-item" data-view="overview"><span aria-hidden="true">▦</span> Overview</button>
+        <button type="button" class="primary-nav-item active" data-view="content"><span aria-hidden="true">▤</span> Content</button>
+        <button type="button" class="primary-nav-item" data-view="customize"><span aria-hidden="true">⚙</span> Customise</button>
+      </nav>
       <button id="sidebarToggle" class="mobile-menu-btn" type="button" aria-label="Open editor panel" aria-controls="appSidebar" aria-expanded="false">☰</button>
       <div class="top-actions">
         <button id="undoBtn" class="icon-btn" title="Undo" aria-label="Undo">↶</button>
         <button id="redoBtn" class="icon-btn" title="Redo" aria-label="Redo">↷</button>
         <button id="saveBtn" class="ghost-btn save-btn"><span class="status-dot" aria-hidden="true"></span>Save</button>
+        <button id="inlineEditBtn" class="ghost-btn edit-mode-btn" type="button" title="Click text in the CV to edit it" aria-pressed="true">✎ Inline Edit <span class="edit-mode-state">On</span></button>
         <button id="exportJsonBtn" class="ghost-btn">Export</button>
         <label class="ghost-btn file-btn">Import <input id="importJson" type="file" accept=".json"></label>
         <button id="docxBtn" class="ghost-btn" title="Export editable Word document">DOCX</button>
@@ -30,10 +36,22 @@
 
     <div class="workspace">
       <aside class="sidebar" id="appSidebar">
-        <div class="side-tabs">
+        <div class="side-tabs legacy-tabs" aria-hidden="true">
           <button class="side-tab active" data-tab="content">Content</button>
           <button class="side-tab" data-tab="design">Design</button>
         </div>
+
+        <section id="overviewTab" class="tab-panel overview-panel hidden">
+          <div class="panel-heading"><div><h2>Overview</h2><p>Your CV workspace at a glance</p></div></div>
+          <div class="overview-card"><span class="overview-icon">▤</span><div><strong>Your CV</strong><p>Edit your details, review the live preview, and export when you’re ready.</p></div></div>
+          <div class="overview-stat-grid">
+            <div class="overview-stat"><span>Page format</span><strong id="overviewPageFormat">A4</strong></div>
+            <div class="overview-stat"><span>Sections</span><strong id="overviewSectionCount">0</strong></div>
+          </div>
+          <button type="button" class="add-section overview-primary" id="overviewEditBtn">Continue editing</button>
+          <button type="button" class="overview-secondary" id="overviewCustomizeBtn">Customise design <span aria-hidden="true">→</span></button>
+          <div class="overview-tip"><strong>Local-first by design</strong><p>Your CV is saved in this browser. Export a JSON backup to move it to another device.</p></div>
+        </section>
 
         <section id="contentTab" class="tab-panel">
           <div class="panel-heading">
